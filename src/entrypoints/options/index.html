@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Country Flag – Options</title>
+    <!-- Full page instead of the embedded dialog: room for the cache controls. -->
+    <meta name="manifest.open_in_tab" content="true" />
+  </head>
+  <body>
+    <main class="page">
+      <header class="page__header">
+        <h1 class="page__title">Country Flag</h1>
+        <p class="page__subtitle">Settings</p>
+      </header>
+
+      <section class="panel">
+        <h2 class="panel__title">Appearance</h2>
+        <div class="segmented" id="theme" role="group" aria-label="Theme">
+          <button type="button" class="segmented__option" data-value="system" aria-pressed="false">
+            System
+          </button>
+          <button type="button" class="segmented__option" data-value="light" aria-pressed="false">
+            Light
+          </button>
+          <button type="button" class="segmented__option" data-value="dark" aria-pressed="false">
+            Dark
+          </button>
+        </div>
+        <p class="hint">
+          <strong>System</strong> follows the operating system. Light and dark override it for the
+          popup and this page.
+        </p>
+      </section>
+
+      <section class="panel">
+        <h2 class="panel__title">Cache</h2>
+        <div class="line">
+          <span class="line__label">Cached lookups</span>
+          <span class="line__value" id="cache-count">…</span>
+        </div>
+        <button type="button" class="button" id="clear-cache">Clear cache</button>
+        <p class="hint" id="status" role="status" aria-live="polite">
+          DNS 10 minutes · country 24 hours · rank 24 hours · flags 1 year. Clearing removes
+          everything, including the stored flag images.
+        </p>
+      </section>
+    </main>
+
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>

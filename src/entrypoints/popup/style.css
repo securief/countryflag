@@ -1,0 +1,229 @@
+/* ---------------------------------------------------------------------------
+   Country Flag popup
+   An "inset grouped list": the popup itself is the card (`main.card`), with a
+   header and a list of rows directly inside it. The palette lives in
+   `src/assets/theme.css`, which both this page and the options page import.
+--------------------------------------------------------------------------- */
+
+:root {
+  --row-min-height: 42px;
+  --gutter: 14px;
+  /* Rendered size of the header flag image (the download itself is 24x24). */
+  --flag-size: 22px;
+}
+
+body {
+  /* ~30% narrower than the original 384px design. */
+  width: 270px;
+}
+
+.app {
+  /* The popup element is the card: no outer padding, the list starts at the
+     edge. `main` already fills the popup, this just states it. */
+  width: 100%;
+}
+
+/* --- InfoCard ------------------------------------------------------------- */
+
+/* Flat, full-bleed surface: no border, no radius, the rows start at the edge. */
+.card {
+  overflow: hidden;
+  background: var(--surface);
+}
+
+/* --- InfoHeader ----------------------------------------------------------- */
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 12px var(--gutter);
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: default;
+  appearance: none;
+}
+
+.header--link {
+  cursor: pointer;
+}
+
+.header--link:hover {
+  background: var(--surface-hover);
+}
+
+.header--link:active {
+  background: var(--surface-pressed);
+}
+
+.header__flag {
+  flex: 0 0 auto;
+  font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif;
+  font-size: var(--flag-size);
+  line-height: 1;
+}
+
+.header__flag img {
+  display: block;
+  width: var(--flag-size);
+  height: auto;
+  border-radius: 2px;
+  /* Hairline ring so white flags stay visible on the card. */
+  box-shadow: 0 0 0 1px rgb(0 0 0 / 0.12);
+}
+
+.header__domain {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* --- InfoList / InfoListItem --------------------------------------------- */
+
+.list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.list-item + .list-item {
+  border-top: 1px solid var(--border);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: var(--row-min-height);
+  padding: 10px var(--gutter);
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: default;
+  appearance: none;
+}
+
+.row--link {
+  cursor: pointer;
+}
+
+.row--link:hover {
+  background: var(--surface-hover);
+}
+
+.row--link:active {
+  background: var(--surface-pressed);
+}
+
+.row__label {
+  flex: 0 0 auto;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.row__value {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--text-secondary);
+  font-size: 14px;
+  font-weight: 500;
+  text-align: right;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.row__value--muted {
+  color: var(--muted);
+  font-weight: 400;
+}
+
+.row__value--loading {
+  color: var(--muted);
+  font-weight: 400;
+  animation: pulse 1.4s ease-in-out infinite;
+}
+
+/* --- Disclosure indicator ------------------------------------------------- */
+
+.chevron {
+  display: none;
+  flex: 0 0 auto;
+  width: 6px;
+  height: 6px;
+  margin-left: 2px;
+  border-right: 1.5px solid var(--muted);
+  border-bottom: 1.5px solid var(--muted);
+  transform: rotate(-45deg);
+}
+
+.row--link .chevron,
+.header--link .chevron {
+  display: block;
+}
+
+/* --- States --------------------------------------------------------------- */
+
+.row:focus-visible,
+.header:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: -2px;
+}
+
+.header__domain.is-loading {
+  display: inline-block;
+  width: 96px;
+  height: 1em;
+  color: transparent;
+  background: var(--border);
+  border-radius: 4px;
+  animation: pulse 1.4s ease-in-out infinite;
+}
+
+.card--empty {
+  padding: 22px 18px;
+  text-align: center;
+}
+
+.empty__title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.empty__text {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 12.5px;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.45;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .row__value--loading,
+  .header__domain.is-loading {
+    animation: none;
+  }
+}

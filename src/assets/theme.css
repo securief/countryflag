@@ -1,0 +1,76 @@
+/* ---------------------------------------------------------------------------
+   Shared palette for the extension pages (popup + options).
+
+   `data-theme` on `<html>` decides the theme:
+     - absent        -> follow the operating system
+     - "light"/"dark" -> force that theme (set by the options page)
+--------------------------------------------------------------------------- */
+
+:root {
+  color-scheme: light;
+
+  --background: #f2f2f7;
+  --surface: #ffffff;
+  --surface-hover: #f4f4f7;
+  --surface-pressed: #e8e8ee;
+  --text: #1c1c1e;
+  --text-secondary: #3a3a3c;
+  --muted: #8a8a8e;
+  --border: #e4e4ea;
+  --focus-ring: #2563eb;
+}
+
+/* The dark values are repeated in the block below on purpose: CSS cannot share
+   one declaration block between a media query and a selector. */
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    color-scheme: dark;
+
+    --background: #161618;
+    --surface: #1f1f22;
+    --surface-hover: #29292e;
+    --surface-pressed: #323238;
+    --text: #f2f2f7;
+    --text-secondary: #d1d1d6;
+    --muted: #8e8e93;
+    --border: #2c2c31;
+    --focus-ring: #4c8dff;
+  }
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+
+  --background: #161618;
+  --surface: #1f1f22;
+  --surface-hover: #29292e;
+  --surface-pressed: #323238;
+  --text: #f2f2f7;
+  --text-secondary: #d1d1d6;
+  --muted: #8e8e93;
+  --border: #2c2c31;
+  --focus-ring: #4c8dff;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--background);
+  color: var(--text);
+  font-family:
+    Inter,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    'Helvetica Neue',
+    Arial,
+    sans-serif;
+  font-size: 14px;
+  line-height: 1.35;
+  -webkit-font-smoothing: antialiased;
+}
