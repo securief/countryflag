@@ -3,14 +3,16 @@ import { browser } from 'wxt/browser';
 /**
  * Tiny cache on top of `chrome.storage.local`.
  *
- * Keys are namespaced per data source (`dns:google.com`, `country:8.8.8.8`,
- * `rank:google.com`) and every entry stores `{ value, cachedAt }`. Only
- * successful lookups are cached, so a failing API is retried on the next popup
- * open instead of being remembered for hours.
+ * Keys are namespaced per data source (`lookup:google.com`) and every entry
+ * stores `{ value, cachedAt }`. Only successful lookups are cached, so a failing
+ * API is retried on the next popup open instead of being remembered for hours.
+ *
+ * The TTL may be a function of the value: an answer whose rank could not be
+ * determined deserves a much shorter life than a final one.
  */
-export type CacheScope = 'dns' | 'geo' | 'rank' | 'flag';
+export type CacheScope = 'lookup';
 
-const CACHE_SCOPES: readonly CacheScope[] = ['dns', 'geo', 'rank', 'flag'];
+const CACHE_SCOPES: readonly CacheScope[] = ['lookup'];
 
 /** Requests that are already running, so parallel callers share one fetch. */
 const inFlight = new Map<string, Promise<unknown>>();
@@ -24,10 +26,13 @@ export function cacheKey(scope: CacheScope, id: string): string {
   return `${scope}:${id}`;
 }
 
-/** Returns the cached value, or `undefined` on a miss/expired entry. */
+/**
+ * Returns the cached value, or `undefined` on a miss/expired entry. `null` is a
+ * cacheable answer of its own ("this domain has nothing to show").
+ */
 export async function cached<T>(
   key: string,
-  ttlMs: number,
+  ttlMs: number | ((value: T | null) => number),
   load: () => Promise<T | null>,
 ): Promise<T | null> {
   const hit = await readCache<T>(key, ttlMs);
@@ -63,21 +68,16 @@ export async function countCacheEntries(): Promise<number> {
   return Object.keys(stored).filter(isCacheKey).length;
 }
 
-/**
- * Reads a cached value without loading it: `undefined` on a miss or an expired
- * entry, `null` when the cached answer itself was "not found".
- */
-export async function peekCache<T>(key: string, ttlMs: number): Promise<T | null | undefined> {
-  const hit = await readCache<T>(key, ttlMs);
-  return hit === undefined ? undefined : hit.value;
-}
-
-async function readCache<T>(key: string, ttlMs: number): Promise<CacheEntry<T> | undefined> {
+async function readCache<T>(
+  key: string,
+  ttlMs: number | ((value: T | null) => number),
+): Promise<CacheEntry<T> | undefined> {
   const stored = await browser.storage.local.get(key);
   const entry: unknown = stored[key];
   if (!isCacheEntry<T>(entry)) return undefined;
 
-  if (Date.now() - entry.cachedAt > ttlMs) {
+  const ttl = typeof ttlMs === 'function' ? ttlMs(entry.value) : ttlMs;
+  if (Date.now() - entry.cachedAt > ttl) {
     await browser.storage.local.remove(key);
     return undefined;
   }

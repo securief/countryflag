@@ -83,3 +83,32 @@ export function isLocalHostname(host: string): boolean {
 
   return isPrivateIPv4(value);
 }
+
+/**
+ * Labels that belong to the public suffix of a ccTLD, so `example.co.uk` keeps
+ * three labels while `dash.cloudflare.com` is reduced to two.
+ *
+ * This is a deliberately small heuristic, not the Public Suffix List: the list
+ * is ~200 KB and would dwarf this 34 KB extension. It is only ever used for the
+ * Tranco fallback, which indexes *registrable* domains - DNS and the detail
+ * links keep using the hostname the tab reported.
+ */
+const SECOND_LEVEL_LABELS = new Set([
+  'ac', 'co', 'com', 'edu', 'gen', 'go', 'gob', 'gov', 'gouv', 'govt',
+  'id', 'in', 'ind', 'ltd', 'ne', 'net', 'or', 'org', 'plc', 'sch',
+]);
+
+/** `dash.cloudflare.com` -> `cloudflare.com`; `blog.example.co.uk` -> `example.co.uk`. */
+export function registrableDomain(host: string): string {
+  // An IP literal is already what it is - never chop it into `1.1`.
+  if (isValidIPv4(host)) return host;
+
+  const labels = host.split('.');
+  if (labels.length <= 2) return host;
+
+  const tld = labels[labels.length - 1] ?? '';
+  const secondLevel = labels[labels.length - 2] ?? '';
+  const suffix = tld.length === 2 && SECOND_LEVEL_LABELS.has(secondLevel);
+
+  return labels.slice(suffix ? -3 : -2).join('.');
+}

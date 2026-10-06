@@ -8,14 +8,9 @@ export default defineConfig({
       'Shows the country flag, server IP, country and Tranco rank of the active website.',
     // Only what the popup really needs: read the active tab URL + cache results.
     permissions: ['storage', 'tabs'],
-    // Narrow host permissions for the public services the extension talks to.
-    // flagsapi.com sends no CORS header, so this one is required.
-    host_permissions: [
-      'https://dns.google/*',
-      'https://api.ip.sb/*',
-      'https://tranco-list.eu/*',
-      'https://flagsapi.com/*',
-    ],
+    // The single API the extension talks to, plus the direct Tranco fallback
+    // used when that API reports no rank.
+    host_permissions: ['https://geoip.kristal.id/*', 'https://tranco-list.eu/*'],
     icons: {
       16: 'icon/16.png',
       32: 'icon/32.png',

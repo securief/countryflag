@@ -1,7 +1,8 @@
 import { browser } from 'wxt/browser';
-import { resetTabIcon, setTabIcon } from './action-icon';
+import { type FlagSource, resetTabIcon, setTabIcon } from './action-icon';
 import { isLocalHostname } from './domain';
-import { detectCountry, siteFromUrl } from './site';
+import { lookupDomain } from './lookup';
+import { siteFromUrl } from './site';
 
 /**
  * Keeps the toolbar icon of every tab in sync with the page it shows.
@@ -92,17 +93,16 @@ export async function syncTabIcon(
     return;
   }
 
-  // A failed lookup (DNS or GEO-IP down) means "no country" - never let it
-  // escape as an unhandled rejection, and never leave a stale flag behind.
-  const country = await detectCountry(site).catch(() => null);
+  // One request per domain (cached), and it never rejects.
+  const result = await lookupDomain(site.domain);
   if (!isCurrentRun(tabId, run)) return; // The tab navigated while we looked.
-  if (country === null) {
+  if (result.outcome !== 'ok') {
     await resetTabIcon(tabId);
     return;
   }
 
-  await setTabIcon(tabId, country.code);
-  if (reapply) scheduleReapply(tabId, run, country.code);
+  await setTabIcon(tabId, result.data.country);
+  if (reapply) scheduleReapply(tabId, run, result.data.country);
 }
 
 /** Reads the tab when no URL was reported (reloads, empty snapshots). */
@@ -117,10 +117,10 @@ async function resolveUrl(tabId: number, url: string | undefined): Promise<strin
   }
 }
 
-function scheduleReapply(tabId: number, run: number, countryCode: string): void {
+function scheduleReapply(tabId: number, run: number, country: FlagSource): void {
   setTimeout(() => {
     if (!isCurrentRun(tabId, run)) return;
-    void setTabIcon(tabId, countryCode);
+    void setTabIcon(tabId, country);
   }, REAPPLY_DELAY_MS);
 }
 

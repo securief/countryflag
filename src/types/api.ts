@@ -1,46 +1,52 @@
 /**
- * Raw shapes of the third-party API responses used by the extension.
+ * Response contract of the single API this extension talks to:
+ * `GET https://geoip.kristal.id/v1/lookup/{domain}`.
  *
  * Everything that comes from the network is untrusted data, so every field is
- * optional and validated before the UI uses it.
+ * optional here and validated in `lib/lookup.ts` before the UI uses it.
  */
 
-/** Response of `https://dns.google/resolve?name=<domain>&type=A`. */
-export interface DohAnswer {
+/** `data:image/png;base64,...` for the country flag, or `null` when unavailable. */
+export interface LookupCountry {
+  /** ISO 3166-1 alpha-2 code, e.g. `US`. */
+  code?: string;
+  /** English country name, e.g. `United States`. */
   name?: string;
-  /** DNS record type, `1` is an A record. */
-  type?: number;
-  TTL?: number;
-  data?: string;
+  flag?: string | null;
 }
 
-export interface DohResponse {
-  /** DNS status code, `0` means NOERROR. */
-  Status?: number;
-  Answer?: DohAnswer[];
-  Comment?: string;
+export interface LookupAsn {
+  /** Numeric ASN without the `AS` prefix, e.g. `15169`. */
+  number?: number;
+  /** Organization owning the network, e.g. `Google LLC`. */
+  name?: string;
 }
 
-/** Response of `https://api.ip.sb/geoip/<ip>`. */
-export interface IpSbGeoIpResponse {
+/** `{ domain, ip, country, asn, rank }` */
+export interface DomainLookup {
+  domain?: string;
   ip?: string;
-  /** ISO 3166-1 alpha-2 country code, e.g. `US`. */
-  country_code?: string;
-  /** English country name, resolved locally instead of trusting this field. */
-  country?: string;
-  /** Autonomous system number, e.g. `15169`. */
-  asn?: number;
-  /** Owner of that autonomous system, e.g. `Google LLC`. */
-  asn_organization?: string;
+  country?: LookupCountry;
+  asn?: LookupAsn | null;
+  /** Tranco rank, or `null` when the domain is not ranked (yet). */
+  rank?: number | null;
 }
 
+/** Every non-2xx answer uses this shape. */
+export interface ApiErrorBody {
+  error?: {
+    code?: string;
+    message?: string;
+  };
+}
+
+/** Response of `https://tranco-list.eu/api/ranks/domain/<domain>`. */
 export interface TrancoRankEntry {
   /** ISO date of the Tranco list, e.g. `2026-10-05`. */
   date?: string;
   rank?: number;
 }
 
-/** Response of `https://tranco-list.eu/api/ranks/domain/<domain>`. */
 export interface TrancoResponse {
   domain?: string;
   /** Daily ranks, most recent first. Empty when the domain is not ranked. */

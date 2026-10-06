@@ -1,14 +1,10 @@
 import { browser } from 'wxt/browser';
 import { countryCodeToFlag } from './country-codes';
-import { FLAG_MIME, flagDataToBytes, getFlagData } from './flag-image';
 
 /**
- * The toolbar icon follows the detected country: the default globe is replaced
- * with the flag of the tab the change belongs to.
- *
- * The flag is the real image from `flag-image.ts`; only when that cannot be
- * loaded (offline, blocked) does it fall back to the Unicode emoji, which some
- * platforms render as the two-letter country code.
+ * The toolbar icon follows the detected country. The flag image arrives from
+ * the lookup API as a base64 data URI; the Unicode emoji is only the fallback
+ * for when that API had no flag (or the image could not be rendered).
  */
 
 /** Icon sizes Chrome asks for: 16 for the toolbar, 32 for HiDPI displays. */
@@ -21,6 +17,14 @@ const EMOJI_FONT = '"Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", s
 
 /** Share of the icon left empty around a rendered emoji glyph. */
 const EMOJI_MARGIN_RATIO = 0.04;
+
+/** What the icon needs to know about a country. */
+export interface FlagSource {
+  /** ISO 3166-1 alpha-2 code, used for the emoji fallback. */
+  code: string;
+  /** `data:image/...;base64,...` URI, or `null` when the API had no flag. */
+  flag: string | null;
+}
 
 type IconImageData = { [size: string]: ImageData };
 
@@ -40,14 +44,14 @@ interface InkBounds {
 const renderedIcons = new Map<string, IconImageData>();
 
 /** Points the toolbar icon of a single tab at a country's flag. */
-export async function setTabIcon(tabId: number | undefined, countryCode: string): Promise<void> {
+export async function setTabIcon(tabId: number | undefined, country: FlagSource): Promise<void> {
   if (tabId === undefined) return;
 
-  let imageData = renderedIcons.get(countryCode);
+  let imageData = renderedIcons.get(country.code);
   if (imageData === undefined) {
-    const rendered = await renderIcon(countryCode);
+    const rendered = await renderIcon(country);
     if (rendered === null) return;
-    renderedIcons.set(countryCode, rendered);
+    renderedIcons.set(country.code, rendered);
     imageData = rendered;
   }
 
@@ -70,21 +74,23 @@ export async function resetTabIcon(tabId: number | undefined): Promise<void> {
   }
 }
 
-/** Real flag image first, emoji only as a fallback. */
-async function renderIcon(countryCode: string): Promise<IconImageData | null> {
-  const flag = await getFlagData(countryCode);
-  if (flag !== null) {
-    const images = await renderImage(flagDataToBytes(flag));
+/** The flag image first, the emoji only when there is no usable image. */
+async function renderIcon(country: FlagSource): Promise<IconImageData | null> {
+  if (country.flag !== null) {
+    const images = await renderImage(country.flag);
     if (images !== null) return images;
   }
 
-  return renderEmoji(countryCodeToFlag(countryCode));
+  return renderEmoji(countryCodeToFlag(country.code));
 }
 
-/** Decodes the cached flag and fits it into every toolbar size. */
-async function renderImage(bytes: Uint8Array<ArrayBuffer>): Promise<IconImageData | null> {
+/** Decodes the data URI and fits the flag into every toolbar size. */
+async function renderImage(dataUri: string): Promise<IconImageData | null> {
+  const blob = dataUriToBlob(dataUri);
+  if (blob === null) return null;
+
   try {
-    const bitmap = await createImageBitmap(new Blob([bytes], { type: FLAG_MIME }));
+    const bitmap = await createImageBitmap(blob);
 
     const images: IconImageData = {};
     for (const size of ICON_SIZES) {
@@ -107,6 +113,29 @@ async function renderImage(bytes: Uint8Array<ArrayBuffer>): Promise<IconImageDat
     return images;
   } catch (error) {
     console.warn('[country flag] flag image could not be rendered', error);
+    return null;
+  }
+}
+
+/**
+ * `data:image/png;base64,...` -> Blob. Decoded by hand instead of with `fetch`
+ * so it works identically in the popup and in the service worker.
+ */
+function dataUriToBlob(dataUri: string): Blob | null {
+  const comma = dataUri.indexOf(',');
+  if (comma < 0 || !dataUri.startsWith('data:')) return null;
+
+  const [mime, encoding] = dataUri.slice('data:'.length, comma).split(';');
+  if (!mime || encoding !== 'base64') return null;
+
+  try {
+    const binary = atob(dataUri.slice(comma + 1));
+    const bytes = new Uint8Array(binary.length);
+    for (let index = 0; index < binary.length; index += 1) {
+      bytes[index] = binary.charCodeAt(index);
+    }
+    return new Blob([bytes], { type: mime });
+  } catch {
     return null;
   }
 }
