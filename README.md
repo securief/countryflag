@@ -3,7 +3,7 @@
 A lightweight Chrome extension (Manifest V3) that shows what the tab you are on
 is actually serving:
 
-![Country Flag popup: country flag, IP, provider, country and Tranco rank](public/img/screenshot.jpg)
+![Country Flag popup: country flag, IP, provider, country and Tranco rank](screenshot.jpg)
 
 The header, the IP, Provider and Country rows open the matching public detail
 page in a new tab. The Rank row is intentionally not a link: Tranco only exposes
