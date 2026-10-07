@@ -3,19 +3,7 @@
 A lightweight Chrome extension (Manifest V3) that shows what the tab you are on
 is actually serving:
 
-```
-┌────────────────────────────────────────┐
-│ 🇺🇸                         google.com   │
-├────────────────────────────────────────┤
-│ IP                         142.250.x.x ›│
-├────────────────────────────────────────┤
-│ Provider                      Google LLC│
-├────────────────────────────────────────┤
-│ Country                  United States ›│
-├────────────────────────────────────────┤
-│ Rank                                  #1│
-└────────────────────────────────────────┘
-```
+![Country Flag popup: country flag, IP, provider, country and Tranco rank](public/img/screenshot.jpg)
 
 The header, the IP, Provider and Country rows open the matching public detail
 page in a new tab. The Rank row is intentionally not a link: Tranco only exposes
