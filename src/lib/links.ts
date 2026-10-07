@@ -5,21 +5,27 @@ import { isValidIPv4, normalizeHostname } from './domain';
  * External detail pages. All URL construction lives here, and every builder
  * validates its input first so no API value can be smuggled into a link.
  *
+ * The domain and IP rows both go to check-host.cc, which runs its checks on the
+ * visitor's behalf, so the target is passed as a query parameter.
+ *
  * There is deliberately no Tranco builder: Tranco has no website, only a raw
  * API endpoint, so the Rank row stays a plain, non-clickable row.
+ *
+ * None of these are fetched by the extension - they are only opened in a new
+ * tab - so no host permission is needed for them.
  */
 
-const IP_SB_ORIGIN = 'https://ip.sb';
+const CHECK_HOST_ORIGIN = 'https://check-host.cc';
 
-/** `https://ip.sb/domain/google.com` */
+/** `https://check-host.cc/?host=google.com` */
 export function domainDetailUrl(domain: string): string | null {
   const host = normalizeHostname(domain);
-  return host ? `${IP_SB_ORIGIN}/domain/${encodeURIComponent(host)}` : null;
+  return host ? `${CHECK_HOST_ORIGIN}/?host=${encodeURIComponent(host)}` : null;
 }
 
-/** `https://ip.sb/geoip/8.8.8.8` */
+/** `https://check-host.cc/?host=8.8.8.8` */
 export function ipDetailUrl(ip: string): string | null {
-  return isValidIPv4(ip) ? `${IP_SB_ORIGIN}/geoip/${encodeURIComponent(ip)}` : null;
+  return isValidIPv4(ip) ? `${CHECK_HOST_ORIGIN}/?host=${encodeURIComponent(ip)}` : null;
 }
 
 /**
@@ -27,8 +33,8 @@ export function ipDetailUrl(ip: string): string | null {
  *
  * The country *name* is used instead of the ISO code, because Maps reads that
  * segment as a search: it lands on the country itself and stays readable. The
- * name always comes from `Intl.DisplayNames` for an already validated code, and
- * spaces become `+`, the way Maps writes them.
+ * name comes from the lookup API, and spaces become `+`, the way Maps writes
+ * them.
  */
 export function countryMapUrl(countryName: string): string | null {
   const name = countryName.trim();

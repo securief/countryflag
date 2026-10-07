@@ -81,7 +81,7 @@ GET https://geoip.kristal.id/v1/lookup/<domain>
 
 | Row | Comes from |
 | --- | --- |
-| IP | `ip` (+ link to `ip.sb/geoip/<ip>`) |
+| IP | `ip` (+ link to `check-host.cc/?host=<ip>`) |
 | Provider | `asn.name` (+ link to `bgp.tools/as/<asn.number>`) — `Unknown` when `asn` is `null` |
 | Country | `country.name` (+ Google Maps link) |
 | Rank | `rank` — `Not ranked` when it is `null` **after** the direct Tranco fallback below |
@@ -119,8 +119,8 @@ a malformed answer is treated as a failure instead of being rendered.
 
 ### External rows
 
-* Header (domain) → `https://ip.sb/domain/<domain>`
-* IP → `https://ip.sb/geoip/<ip>`
+* Header (domain) → `https://check-host.cc/?host=<domain>`
+* IP → `https://check-host.cc/?host=<ip>`
 * Provider → `https://bgp.tools/as/<asn>`
 * Country → `https://www.google.com/maps/place/<Country+Name>/`
 * Rank → not clickable
